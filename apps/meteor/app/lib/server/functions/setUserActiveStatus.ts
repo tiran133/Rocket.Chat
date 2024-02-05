@@ -90,10 +90,6 @@ export async function setUserActiveStatus(userId: string, active: boolean, confi
 
 	await Users.setUserActive(userId, active);
 
-	if (active && !user.active) {
-		await callbacks.run('afterActivateUser', user);
-	}
-
 	if (!active && user.active) {
 		await callbacks.run('afterDeactivateUser', user);
 	}
