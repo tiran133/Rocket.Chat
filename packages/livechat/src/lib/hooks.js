@@ -35,6 +35,18 @@ const updateIframeGuestData = (data) => {
 	createOrUpdateGuest(guestData);
 };
 
+const updateIframeData = (data) => {
+	const { iframe } = store.state;
+
+	if (data.guest) {
+		throw new Error('Guest data changes not allowed. Use updateIframeGuestData instead.');
+	}
+
+	const iframeData = { ...iframe, ...data };
+
+	store.setState({ iframe: { ...iframeData } });
+};
+
 const api = {
 	pageVisited(info) {
 		const { token, room } = store.state;
@@ -79,6 +91,11 @@ const api = {
 			config: { departments = [] },
 			defaultAgent,
 		} = store.state;
+
+		if (!user) {
+			updateIframeData({ defaultDepartment: value });
+			return;
+		}
 
 		const { department: existingDepartment } = user || {};
 

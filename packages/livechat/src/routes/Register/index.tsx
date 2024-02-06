@@ -43,7 +43,8 @@ export const Register = ({ screenProps }: { screenProps: { [key: string]: unknow
 			customFields = [],
 		},
 		iframe: {
-			guest: { department: guestDepartment, name: guestName, email: guestEmail },
+			defaultDepartment,
+			guest: { name: guestName, email: guestEmail },
 			theme: { color: customColor, fontColor: customFontColor, iconColor: customIconColor, title: customTitle },
 		},
 		loading = false,
@@ -95,8 +96,9 @@ export const Register = ({ screenProps }: { screenProps: { [key: string]: unknow
 	};
 
 	const getDepartmentDefault = () => {
-		if (departments.some((dept) => dept._id === guestDepartment)) {
-			return guestDepartment;
+		const dept = departments.find((dept) => dept._id === defaultDepartment || dept.name === defaultDepartment);
+		if (dept?._id) {
+			return dept._id;
 		}
 	};
 

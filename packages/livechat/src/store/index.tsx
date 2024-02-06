@@ -42,6 +42,7 @@ export type LivechatStoreState = {
 		guest: any;
 		theme: any;
 		visible: boolean;
+		defaultDepartment?: string;
 	};
 	gdpr: {
 		accepted: boolean;
