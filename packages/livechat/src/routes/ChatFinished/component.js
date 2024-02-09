@@ -5,11 +5,13 @@ import { Button } from '../../components/Button';
 import { ButtonGroup } from '../../components/ButtonGroup';
 import Screen from '../../components/Screen';
 import { createClassName } from '../../helpers/createClassName';
+import Triggers from '../../lib/triggers';
 import styles from './styles.scss';
 
 class ChatFinished extends Component {
 	handleClick = () => {
 		const { onRedirectChat } = this.props;
+		Triggers.callbacks?.emit('chat-visitor-registered');
 		onRedirectChat && onRedirectChat();
 	};
 
