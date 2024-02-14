@@ -117,7 +117,7 @@ export const sendNotification = async ({
 			disableAllMessageNotifications,
 			status: receiver.status ?? 'offline',
 			statusConnection: receiver.statusConnection ?? 'offline',
-			desktopNotifications: desktopNotifications ?? 'default',
+			desktopNotifications,
 			hasMentionToAll,
 			hasMentionToHere,
 			isHighlighted,
@@ -304,41 +304,41 @@ export async function sendMessageNotifications(message: IMessage, room: IRoom, u
 	} as const;
 
 	(['desktop', 'mobile', 'email'] as const).forEach((kind) => {
-		const notificationField = `${kind === 'mobile' ? 'mobilePush' : kind}Notifications`;
+		const notificationField = kind === 'mobile' ? 'mobilePush' : `${kind}Notifications`;
 
-		const filter: Filter<ISubscription> = { [notificationField]: 'all' };
+		const roomPrefAll: Filter<ISubscription> = { [notificationField]: 'all' };
 
 		if (disableAllMessageNotifications) {
-			filter[`${kind}PrefOrigin`] = { $ne: 'user' };
+			roomPrefAll[`${kind}PrefOrigin`] = { $ne: 'user' };
 		}
 
-		query.$or.push(filter);
+		query.$or.push(roomPrefAll);
 
-		if (mentionIdsWithoutGroups.length > 0) {
+		if (!disableAllMessageNotifications && room.t === 'd') {
+			query.$or.push({
+				[notificationField]: 'mentions',
+			});
+		} else if (mentionIdsWithoutGroups.length > 0) {
 			query.$or.push({
 				[notificationField]: 'mentions',
 				'u._id': { $in: mentionIdsWithoutGroups },
-			});
-		} else if (!disableAllMessageNotifications && (hasMentionToAll || hasMentionToHere)) {
-			query.$or.push({
-				[notificationField]: 'mentions',
 			});
 		}
 
 		const serverField = kind === 'email' ? 'emailNotificationMode' : `${kind}Notifications`;
 		const serverPreference = settings.get(`Accounts_Default_User_Preferences_${serverField}`);
-		if (
-			(room.t === 'd' && serverPreference !== 'nothing') ||
-			(!disableAllMessageNotifications && (serverPreference === 'all' || hasMentionToAll || hasMentionToHere))
-		) {
-			query.$or.push({
-				[notificationField]: { $exists: false },
-			});
-		} else if (serverPreference === 'mentions' && mentionIdsWithoutGroups.length > 0) {
-			query.$or.push({
-				[notificationField]: { $exists: false },
-				'u._id': { $in: mentionIdsWithoutGroups },
-			});
+
+		if (!disableAllMessageNotifications) {
+			if (serverPreference === 'all' || hasMentionToAll || hasMentionToHere || room.t === 'd') {
+				query.$or.push({
+					[notificationField]: { $exists: false },
+				});
+			} else if (serverPreference === 'mentions' && mentionIdsWithoutGroups.length > 0) {
+				query.$or.push({
+					[notificationField]: { $exists: false },
+					'u._id': { $in: mentionIdsWithoutGroups },
+				});
+			}
 		}
 	});
 
